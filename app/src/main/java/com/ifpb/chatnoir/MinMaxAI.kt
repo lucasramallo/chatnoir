@@ -35,6 +35,21 @@ object MinMaxAI {
     private const val CAT_WIN_SCORE = 10000
     private const val FENCE_WIN_SCORE = -10000
 
+    /**
+     * Avalia a posição do gato no tabuleiro com base na distância até a borda.
+     *
+     * A função calcula uma pontuação que recompensa o gato por estar mais próximo da borda,
+     * pois esse é o objetivo do jogo para o gato.
+     *
+     * O valor `40` é um fator de escala que multiplica a distância mínima `d` do gato até a borda,
+     * convertendo essa distância em uma penalização proporcional na pontuação.
+     * Quanto menor `d`, maior será a pontuação (até 500), incentivando o gato a se mover em direção à borda.
+     * O resultado é limitado para ficar entre -500 e 500 para evitar valores extremos.
+     *
+     * Exemplo:
+     * - Se o gato estiver na borda (d = 0), a pontuação será próxima de 500 (melhor cenário).
+     * - Se estiver mais longe (d maior), a pontuação diminui proporcionalmente.
+     */
     private fun evaluate(state: GameState): Int {
         return when {
             GameLogic.hasCatWon(state) -> CAT_WIN_SCORE
