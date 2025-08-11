@@ -17,7 +17,6 @@ import android.util.Log
  * validando jogadas e atualizando o tabuleiro.
  */
 object GameLogic {
-    // Movimentos possíveis do gato, dependendo se a linha é par ou ímpar
     private val deltasPar = listOf(
         Position(-1, -1), // Noroeste
         Position(-1, 0),  // Nordeste
@@ -36,7 +35,6 @@ object GameLogic {
         Position(1, 1)    // Sudeste
     )
 
-    // Verifica se a posição é válida (dentro do tabuleiro e sem cerca)
     fun isValidMove(state: GameState, pos: Position): Boolean {
         return pos.row >= 0 && pos.row <= 10 && pos.col >= 0 && pos.col <= 10 && state.board[pos.row][pos.col] != CellState.FENCE
     }

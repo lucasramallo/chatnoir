@@ -27,14 +27,14 @@ enum class CellState {
  *   evitando a posição inicial do gato.
  *
  * Esta classe é essencial para que a UI (Jetpack Compose) reaja automaticamente
- * às mudanças no jogo, graças ao uso de `mutableStateOf` e `mutableStateListOf`.
+ * às mudanças no jogo, graças ao uso de `mutableStateOf` e `mutableStateListOf` que são tipos de estados reativos do Jetpack Compose.
  */
 class GameState {
     val board = mutableStateListOf<SnapshotStateList<CellState>>()
     val catPosition = mutableStateOf(Position(5, 5))
     val playerWins = mutableStateOf(0)
     val catWins = mutableStateOf(0)
-    val gameStatus = mutableStateOf("Player's turn (Fence)")
+    val gameStatus = mutableStateOf("Vez do jogador")
 
     init {
         repeat(11) {

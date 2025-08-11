@@ -65,7 +65,8 @@ fun GameScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(vertical = 20.dp)
+            .background(Color(0xFFF7FFF1)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -97,7 +98,7 @@ fun GameScreen() {
                         val bestMove = MinMaxAI.findBestMove(gameState)
                         bestMove?.let {
                             GameLogic.moveCat(gameState, it)
-                            gameState.gameStatus.value = "Player's turn (Fence)"
+                            gameState.gameStatus.value = "Vez do jogador"
                             Log.d("GameScreen", "Gato moveu para (${it.row}, ${it.col})")
                             if (GameLogic.hasCatWon(gameState)) {
                                 gameState.gameStatus.value = "Gato venceu!"
