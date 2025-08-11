@@ -16,7 +16,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.core.DataStore
@@ -28,6 +30,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlin.math.cos
+import kotlin.math.sin
+import androidx.compose.foundation.Canvas
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import kotlin.math.PI
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "game_scores")
 
@@ -65,7 +76,7 @@ fun GameScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(vertical = 20.dp)
+            .padding(20.dp)
             .background(Color(0xFFF7FFF1)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -81,7 +92,7 @@ fun GameScreen() {
         )
         Board(gameState) { row, col ->
             Log.d("GameScreen", "Clicou em ($row, $col), estado: ${gameState.board[row][col]}, status: ${gameState.gameStatus.value}")
-            if (gameState.board[row][col] == CellState.EMPTY && gameState.gameStatus.value == "Player's turn (Fence)") {
+            if (gameState.board[row][col] == CellState.EMPTY && gameState.gameStatus.value == "Vez do jogador") {
                 val placed = GameLogic.placeFence(gameState, Position(row, col))
                 if (placed) {
                     gameState.gameStatus.value = "Cat's turn"
@@ -143,10 +154,76 @@ fun GameScreen() {
                 gameState.gameStatus.value = "Vez do jogador"
                 Log.d("GameScreen", "Jogo reiniciado")
             },
-            modifier = Modifier.padding(top = 16.dp)
+            modifier = Modifier.padding(top = 16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF68B207)
+            )
         ) {
             Text("Reiniciar Jogo")
         }
+        Button(
+            onClick = {
+                gameState.board.clear()
+                gameState.catWins.value = 0
+                gameState.playerWins.value = 0
+                repeat(11) {
+                    val row = mutableStateListOf<CellState>()
+                    repeat(11) { row.add(CellState.EMPTY) }
+                    gameState.board.add(row)
+                }
+                gameState.board[5][5] = CellState.CAT
+                gameState.catPosition.value = Position(5, 5)
+                val fenceCount = (9..15).random()
+                repeat(fenceCount) {
+                    var row: Int
+                    var col: Int
+                    do {
+                        row = (0..10).random()
+                        col = (0..10).random()
+                    } while (gameState.board[row][col] != CellState.EMPTY || (row == 5 && col == 5))
+                    gameState.board[row][col] = CellState.FENCE
+                }
+                gameState.gameStatus.value = "Vez do jogador"
+                Log.d("GameScreen", "Placar zerado")
+            },
+            modifier = Modifier.padding(top = 16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF68B207)
+            )
+        ) {
+            Text("Zerar placar")
+        }
+    }
+}
+
+@Composable
+fun HexCell(
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Canvas(
+        modifier = modifier
+            .size(30.dp)
+            .clickable { onClick() }
+    ) {
+        val path = Path()
+        val radius = size.minDimension / 2f
+        val centerX = size.width / 2f
+        val centerY = size.height / 2f
+
+        for (i in 0..5) {
+            val angle = Math.toRadians((60.0 * i - 30))
+            val x = centerX + radius * cos(angle).toFloat()
+            val y = centerY + radius * sin(angle).toFloat()
+            if (i == 0) {
+                path.moveTo(x, y)
+            } else {
+                path.lineTo(x, y)
+            }
+        }
+        path.close()
+        drawPath(path, color)
     }
 }
 
@@ -155,22 +232,19 @@ fun Board(gameState: GameState, onCellClick: (Int, Int) -> Unit) {
     Column {
         for (row in 0..10) {
             Row(
-                modifier = Modifier.offset(x = if (row % 2 == 1) 15.dp else 0.dp)
+                modifier = Modifier
+                    .offset(x = if (row % 2 == 1) 18.dp else 0.dp)
             ) {
                 for (col in 0..10) {
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .padding(2.dp)
-                            .clip(CircleShape)
-                            .background(
-                                when (gameState.board[row][col]) {
-                                    CellState.CAT -> Color.Yellow
-                                    CellState.FENCE -> Color.Black
-                                    CellState.EMPTY -> Color(0xFF39FF14) // Verde neon
-                                }
-                            )
-                            .clickable { onCellClick(row, col) }
+                    val cellColor = when (gameState.board[row][col]) {
+                        CellState.CAT -> Color.Black
+                        CellState.FENCE -> Color(0xFF68B207)
+                        CellState.EMPTY -> Color(0xFFA0FF1A)
+                    }
+
+                    HexCell(
+                        color = cellColor,
+                        onClick = { onCellClick(row, col) }
                     )
                 }
             }
