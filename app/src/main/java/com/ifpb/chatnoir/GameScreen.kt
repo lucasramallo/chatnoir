@@ -5,9 +5,12 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
@@ -15,8 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.unit.dp
@@ -33,12 +34,6 @@ import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.foundation.Canvas
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import kotlin.math.PI
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "game_scores")
 
@@ -134,36 +129,6 @@ fun GameScreen() {
         Button(
             onClick = {
                 gameState.board.clear()
-                repeat(11) {
-                    val row = mutableStateListOf<CellState>()
-                    repeat(11) { row.add(CellState.EMPTY) }
-                    gameState.board.add(row)
-                }
-                gameState.board[5][5] = CellState.CAT
-                gameState.catPosition.value = Position(5, 5)
-                val fenceCount = (9..15).random()
-                repeat(fenceCount) {
-                    var row: Int
-                    var col: Int
-                    do {
-                        row = (0..10).random()
-                        col = (0..10).random()
-                    } while (gameState.board[row][col] != CellState.EMPTY || (row == 5 && col == 5))
-                    gameState.board[row][col] = CellState.FENCE
-                }
-                gameState.gameStatus.value = "Vez do jogador"
-                Log.d("GameScreen", "Jogo reiniciado")
-            },
-            modifier = Modifier.padding(top = 16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF68B207)
-            )
-        ) {
-            Text("Reiniciar Jogo")
-        }
-        Button(
-            onClick = {
-                gameState.board.clear()
                 gameState.catWins.value = 0
                 gameState.playerWins.value = 0
                 repeat(11) {
@@ -193,6 +158,44 @@ fun GameScreen() {
         ) {
             Text("Zerar placar")
         }
+    }
+
+    if (gameState.gameStatus.value == "Cerca venceu!" || gameState.gameStatus.value == "Gato venceu!") {
+        AlertDialog(
+            onDismissRequest = { /* Prevent dismissing by clicking outside */ },
+            title = { Text("Fim de Jogo") },
+            text = { Text(gameState.gameStatus.value) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Reset game when dialog is dismissed
+                        gameState.board.clear()
+                        repeat(11) {
+                            val row = mutableStateListOf<CellState>()
+                            repeat(11) { row.add(CellState.EMPTY) }
+                            gameState.board.add(row)
+                        }
+                        gameState.board[5][5] = CellState.CAT
+                        gameState.catPosition.value = Position(5, 5)
+                        val fenceCount = (9..15).random()
+                        repeat(fenceCount) {
+                            var row: Int
+                            var col: Int
+                            do {
+                                row = (0..10).random()
+                                col = (0..10).random()
+                            } while (gameState.board[row][col] != CellState.EMPTY || (row == 5 && col == 5))
+                            gameState.board[row][col] = CellState.FENCE
+                        }
+                        gameState.gameStatus.value = "Vez do jogador"
+                        Log.d("GameScreen", "Jogo reiniciado via dialog")
+                    }
+                ) {
+                    Text("Novo Jogo")
+                }
+            },
+            dismissButton = null
+        )
     }
 }
 
