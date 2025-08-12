@@ -162,6 +162,7 @@ fun GameScreen() {
 
     if (gameState.gameStatus.value == "Cerca venceu!" || gameState.gameStatus.value == "Gato venceu!") {
         AlertDialog(
+            onDismissRequest = {},
             title = { Text("Fim de Jogo") },
             text = { Text(gameState.gameStatus.value) },
             confirmButton = {
